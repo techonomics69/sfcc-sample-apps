@@ -32,3 +32,7 @@ const apiClient = new ApolloClient({
 });
 
 export { apiClient };
+
+import { setClient } from '@lwce/apollo-client';
+
+setClient(apiClient);

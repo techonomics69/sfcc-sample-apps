@@ -5,8 +5,77 @@
     For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
 import { LightningElement, api, wire, track } from 'lwc';
-import { productDetailWireAdaptor } from 'commerce/data';
+//import { productDetailWireAdaptor } from 'commerce/data';
 import { canAddToCart } from './product.helper.js';
+import { useQuery, useMutation } from '@lwce/apollo-client';
+import gql from 'graphql-tag';
+
+const QUERY = gql`
+    query ($productId: String!, $selectedColor: String!) {
+        product(id: $productId, selectedColor: $selectedColor) {
+            name
+            id
+            masterId
+            longDescription
+            shortDescription
+            currency
+            price
+            prices {
+                sale
+                list
+            }
+            image
+            images(allImages: true, size: "large") {
+                title
+                alt
+                link
+            }
+            variants {
+                id
+                variationValues {
+                    key
+                    value
+                }
+            }
+            variationAttributes {
+                variationAttributeType {
+                    id
+                    name
+                }
+                variationAttributeValues {
+                    name
+                    value
+                    orderable
+                    swatchImage {
+                        link
+                        style
+                    }
+                }
+            }
+            inventory {
+                ats
+                backorderable
+                id
+                orderable
+                preorderable
+                stockLevel
+            }
+            type {
+                bundle
+                item
+                master
+                option
+                set
+                variant
+                variationGroup
+            }
+            productPromotions {
+                calloutMsg
+                promotionId
+                promotionalPrice
+            }
+        }
+    }`;
 
 /**
  * A product detail component is an interactive component which fetches and displays details about a product.
@@ -15,23 +84,39 @@ import { canAddToCart } from './product.helper.js';
  * the current storefront shopping cart.
  */
 export default class ProductDetail extends LightningElement {
-    @api pid = '';
-    @track selectedColor;
-    @track product = {
+    variables = {
+        productId: '',
+        selectedColor: ''
+    }
+    @api set pid (val) {
+        this.variables = {...this.variables, productId: val};
+    }
+    set selectedColor (val) {
+        this.variables = {...this.variables, selectedColor: val};
+    }
+    get pid() {
+        return this.variables.productId;
+    }
+    get selectedColor() {
+        return this.variables.selectedColor;
+    }
+    product = {
         images: [],
         productPromotions: [],
     };
     masterPid;
     activeImage;
-    // The wire adaptor to get product details for master and variations.
-    @wire(productDetailWireAdaptor, {
-        pid: '$pid',
-        selectedColor: '$selectedColor',
+    @wire(useQuery, {
+        query: QUERY,
+        lazy: false,
+        variables: '$variables'
     })
-    updateProduct(product) {
-        this.product = product;
-        this.masterPid = product.masterId;
-        this.setActiveImageCss(0);
+    updateProduct(response) {
+        if (response.initialized) {
+            this.product = {...this.product, ...response.data.product};
+            this.masterPid = response.data.product.masterId;
+            this.setActiveImageCss(0);
+        }
     }
     @track selectedQty;
 
@@ -81,7 +166,7 @@ export default class ProductDetail extends LightningElement {
                 variationPid = sizeVariants[0].id;
             } else if (!e.detail.hasSize && e.detail.hasColor) {
                 variationPid = colorVariants[0].id;
-                this.selectedColor = e.detail.selectedColor;
+                this.electedColor = e.detail.selectedColor;
             } else {
                 variationPid = this.masterPid;
             }
