@@ -166,7 +166,7 @@ export default class ProductDetail extends LightningElement {
                 variationPid = sizeVariants[0].id;
             } else if (!e.detail.hasSize && e.detail.hasColor) {
                 variationPid = colorVariants[0].id;
-                this.electedColor = e.detail.selectedColor;
+                this.selectedColor = e.detail.selectedColor;
             } else {
                 variationPid = this.masterPid;
             }
