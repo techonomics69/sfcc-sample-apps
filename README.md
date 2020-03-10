@@ -35,6 +35,7 @@ To set up the sample application:
 <tr><td><code>COMMERCE_CLIENT_SHORT_CODE</code></td><td>Region-specific merchant identifier (for example, staging-001).</td></tr>
 <tr><td><code>COMMERCE_SESSION_SECRET</code></td><td>Some unique identifier for session management (for example, thisisasecretkey).</td></tr>
 </table>
+Note : The COMMERCE_SESSION_SECRET key needs to be unique per application, each customer should have a different key, it not then sessions could be bleed tetween ecommerce sites. 
 
 5. Install dependencies:
 `yarn`
